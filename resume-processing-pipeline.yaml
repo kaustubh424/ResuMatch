@@ -1,0 +1,86 @@
+# Flow specification version
+version: "1.0.0"
+
+# Flow metadata and configuration
+metadata:
+  flow_type: "compound"
+  name: "resume-processing-pipeline"
+  description: "Processes resumes, enhances them, and generates a cover letter"
+  author: "stutijain2006"
+  tags: ["resume", "AI", "automation"]
+  private: true
+
+# Primary input definitions
+inputs:
+  original_resume:
+    type: string
+    description: "The original resume text provided by the user"
+    required: true
+    example: "John Doe\nSkills: Python, AWS\n..."
+
+  user_interest:
+    type: string
+    description: "The user's interest or personalized message for the cover letter"
+    required: true
+    example: "I admire the company's innovative approach."
+
+# Workflow definition
+workflow:
+  # Flow 1: Skill Extraction
+  skill_extraction:
+    type: "elemental"
+    flow_name: "stutijain2006/skill-extraction"
+    inputs:
+      resume_input: ${inputs.original_resume}
+
+  # Flow 2: Job Profile Matchmaking
+  job_profile_matchmaking:
+    type: "elemental"
+    flow_name: "stutijain2006/job-profile-matchmaking"
+    depends_on: [skill_extraction]
+    inputs:
+      resume_skills: ${skill_extraction.output.skills}
+
+  # Flow 3: Resume Enhancement
+  resume_enhancement:
+    type: "elemental"
+    flow_name: "stutijain2006/resume-enhancement"
+    depends_on: [skill_extraction, job_profile_matchmaking]
+    inputs:
+      original_resume: ${inputs.original_resume}
+      job_title: ${job_profile_matchmaking.output.job_title}
+      job_requirements: ${job_profile_matchmaking.output.job_requirements}
+
+  # Flow 4: Cover Letter Generator
+  cover_letter_generator:
+    type: "elemental"
+    flow_name: "stutijain2006/cover-letter-generator"
+    depends_on: [resume_enhancement, job_profile_matchmaking]
+    inputs:
+      job_title: ${job_profile_matchmaking.output.job_title}
+      job_requirements: ${job_profile_matchmaking.output.job_requirements}
+      skills_and_experience: ${resume_enhancement.output}
+      user_interest: ${inputs.user_interest}
+
+# Output configuration
+output:
+  value:
+    - step: "Resume Enhancement"
+      output: ${resume_enhancement.output}
+    - step: "Cover Letter Generator"
+      output: ${cover_letter_generator.output}
+
+# Flow documentation
+readme: |
+  ### Overview
+  This compound flow processes resumes and generates an enhanced resume and personalized cover letter.
+
+  ### Steps:
+  1. **Skill Extraction**: Extracts skills and key information from the resume.
+  2. **Job Profile Matchmaking**: Matches extracted skills to job titles and requirements.
+  3. **Resume Enhancement**: Enhances the resume based on the job requirements.
+  4. **Cover Letter Generator**: Generates a personalized cover letter.
+
+  ### Outputs:
+  - **Enhanced Resume**: Improved resume tailored to the job profile.
+  - **Cover Letter**: Personalized cover letter.
